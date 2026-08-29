@@ -6,7 +6,7 @@ import java.util.*;
 public class HistoricoVisualizacao {
 
     private final DataBase dataBase;
-    final Map<ItemCardapio, LocalDateTime> visualizacoes = new HashMap<>();
+    final Map<ItemCardapio, LocalDateTime> visualizacoes = new WeakHashMap<>();
 
     public HistoricoVisualizacao(DataBase dataBase) {
         this.dataBase = dataBase;

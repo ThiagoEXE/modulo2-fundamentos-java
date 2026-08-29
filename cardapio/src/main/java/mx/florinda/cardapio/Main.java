@@ -1,18 +1,19 @@
 package mx.florinda.cardapio;
+import java.math.BigDecimal;
 import java.util.*;
 
 public class Main {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         DataBase database = new DataBase();
-        HistoricoVisualizacao historicoVisualizacao = new HistoricoVisualizacao(database);
-        historicoVisualizacao.registrarVisualizacao(1L);
-        historicoVisualizacao.registrarVisualizacao(2L);
-        historicoVisualizacao.registrarVisualizacao(4L);
-        historicoVisualizacao.registrarVisualizacao(6L);
 
-        historicoVisualizacao.mostrarTotalVisualizados();
-        historicoVisualizacao.listarVisualizacoes();
+        // PRECISO ALTERAR O PRECO DE UM ITEM DO CARDAPIO
+        database.alterarPrecoItemCardapio(1L, new BigDecimal("3.99")); // 2.99 => 3.99
+        database.alterarPrecoItemCardapio(1L, new BigDecimal("2.99")); // 3.99 => 2.99
+        database.alterarPrecoItemCardapio(1L, new BigDecimal("4.99")); // 2.99 => 4.99
+
+        // PRECISO AUDITAR AS MUDANCAS DE PRECO DOS ITENS DO CARDAPIO
+        database.imprimirRastroAuditoriaPrecos();
 
     }
 }

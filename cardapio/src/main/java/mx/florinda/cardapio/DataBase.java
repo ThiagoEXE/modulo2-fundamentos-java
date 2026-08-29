@@ -8,6 +8,7 @@ import static mx.florinda.cardapio.ItemCardapio.CategoriaCardapio.*;
 public class DataBase {
 
     private final Map<Long, ItemCardapio> itensPoId = new HashMap<>();
+    private final Map<ItemCardapio, BigDecimal> auditoriaPrecos = new IdentityHashMap<>();
 
     public DataBase() {
         ItemCardapio refrescoDoChaves = new ItemCardapio(1L, "Refresco do Chaves", """
@@ -49,5 +50,29 @@ public class DataBase {
 
         ItemCardapio itemCardapio = itensPoId.get(itemId);
         return Optional.ofNullable(itemCardapio);
+    }
+
+    public boolean removerItemCardapio(Long idParaRemover) {
+        ItemCardapio itemCardapioRemovido = itensPoId.remove(idParaRemover);
+
+        return itemCardapioRemovido != null;
+    }
+
+    public boolean alterarPrecoItemCardapio(Long itemId, BigDecimal novoPreco) {
+        ItemCardapio itemAntigo = itensPoId.get(itemId);
+        if (itemId == null) {
+            return false;
+        }
+        ItemCardapio itemComPrecoAlterado =  itemAntigo.alterarPreco(novoPreco);
+        itensPoId.put(itemId, itemComPrecoAlterado);
+        auditoriaPrecos.put(itemAntigo, novoPreco);
+        return true;
+    }
+
+    public void imprimirRastroAuditoriaPrecos() {
+        System.out.println("\nAuditoria de preços:");
+        auditoriaPrecos.forEach((itemAntigo, novoPreco) ->
+                System.out.printf("- %s: %s => %s\n", itemAntigo.nome(), itemAntigo.preco(), novoPreco));
+        System.out.println();
     }
 }
