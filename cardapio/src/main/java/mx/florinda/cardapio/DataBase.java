@@ -1,5 +1,7 @@
 package mx.florinda.cardapio;
 
+import com.google.gson.Gson;
+
 import java.math.BigDecimal;
 import java.util.*;
 
@@ -75,4 +77,11 @@ public class DataBase {
                 System.out.printf("- %s: %s => %s\n", itemAntigo.nome(), itemAntigo.preco(), novoPreco));
         System.out.println();
     }
+
+    public String adicionaItemCardapio(String dataJson) {
+        Gson gson = new Gson();
+        ItemCardapio novoItem = gson.fromJson(dataJson, ItemCardapio.class);
+        return novoItem.nome();
+    }
+
 }
