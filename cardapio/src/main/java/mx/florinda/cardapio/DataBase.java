@@ -1,11 +1,16 @@
 package mx.florinda.cardapio;
 
-import com.google.gson.Gson;
-
 import java.math.BigDecimal;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
-import static mx.florinda.cardapio.ItemCardapio.CategoriaCardapio.*;
+import static mx.florinda.cardapio.ItemCardapio.CategoriaCardapio.BEBIDAS;
+import static mx.florinda.cardapio.ItemCardapio.CategoriaCardapio.PRATOS_PRINCIPAIS;
+import static mx.florinda.cardapio.ItemCardapio.CategoriaCardapio.SOBREMESAS;
 
 public class DataBase {
 
@@ -78,10 +83,8 @@ public class DataBase {
         System.out.println();
     }
 
-    public String adicionaItemCardapio(String dataJson) {
-        Gson gson = new Gson();
-        ItemCardapio novoItem = gson.fromJson(dataJson, ItemCardapio.class);
-        return novoItem.nome();
+    public void adicionaItemCardapio(ItemCardapio itemCardapio) {
+        itensPoId.put(itemCardapio.id(), itemCardapio);
     }
 
 }

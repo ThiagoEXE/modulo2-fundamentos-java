@@ -1,6 +1,5 @@
 package mx.florinda.cardapio;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.PrintStream;
@@ -8,10 +7,15 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+import com.google.gson.Gson;
+
 public class ServidorItensCardapioComSocket {
+
+    private static final DataBase database = new DataBase();
 
     public static void main(String[] args) throws Exception {
 
@@ -24,7 +28,6 @@ public class ServidorItensCardapioComSocket {
 
                     Socket clientSocket = serverSocket.accept();
                     executorService.execute(() -> trataRequisicao(clientSocket));
-
 
                 }
             }
@@ -45,78 +48,80 @@ public class ServidorItensCardapioComSocket {
 
             String request = requestBuilder.toString();
             System.out.println(request);
-            String[] partesReqsuisicao = request.split(" ");
+            System.out.println("--------------------------");
+            System.out.println("\n\nChegou um novo request");
 
-            String metodoHTTP = partesReqsuisicao[0];
-            String endpoint = partesReqsuisicao[1];
-            System.out.println("Método usado: " + metodoHTTP);
-            Thread.sleep(250);
-            if(metodoHTTP.equals("GET")) {
+            String[] requestChunks = request.split("\r\n\r\n");
 
-                if (endpoint.equals("/itens-cardapio")) {
-                    getItensCardapio(clientSocket);
-                } else if(endpoint.equals("/itens-cardapio/total")) {
-                    getQtdItensCardapio(clientSocket);
-                } else{
-                    System.out.println("Rota não existe");
+            String requestLineAndHeaders = requestChunks[0];
+            String[] requestLineAndHeadersChunks = requestLineAndHeaders.split("\r\n");
+            String requestLine = requestLineAndHeadersChunks[0];
+            String[] requestLineChunks = requestLine.split(" ");
+
+            // method (GET/POST)
+            String method = requestLineChunks[0];
+            // uri 
+            String requestURI = requestLineChunks[1];
+            System.out.println(method);
+            System.out.println(requestURI);
+
+            OutputStream clientOS = clientSocket.getOutputStream();
+            PrintStream clientOut = new PrintStream(clientOS);
+            if (method.equals("GET") && requestURI.equals("/itensCardapio.json")) {
+                System.out.println("Chamou arquivo Json");
+
+                Path path = Path.of("itensCardapio.json");
+                String json = Files.readString(path);
+
+                clientOut.println("HTTP/1.1 200 OK");
+                clientOut.println("Content-type: application/json; charset=UTF-8");
+                clientOut.println();
+                clientOut.println(json);
+            } else if (method.equals("GET") && requestURI.equals("/itens-cardapio")) {
+                System.out.println("Chamou Listagem de Itens de Cardápio");
+
+                List<ItemCardapio> listaItensCardapio = database.listaDeItensCardapio();
+                Gson gson = new Gson();
+                String json = gson.toJson(listaItensCardapio);
+
+                clientOut.println("HTTP/1.1 200 OK");
+                clientOut.println("Content-type: application/json; charset=UTF-8");
+                clientOut.println();
+                clientOut.println(json);
+
+            } else if (method.equals("GET") && requestURI.equals("/itens-cardapio/total")) {
+                System.out.println("Chamou Total de Itens de Cardápio");
+
+                List<ItemCardapio> listaItensCardapio = database.listaDeItensCardapio();
+                int total = listaItensCardapio.size();
+                clientOut.println("HTTP/1.1 200 OK");
+                clientOut.println("Content-type: application/json; charset=UTF-8");
+                clientOut.println();
+                clientOut.println("Total de Itens de Cardápio: " + total);
+
+            } else if (method.equals("POST") && requestURI.equals("/itens-cardapio")) {
+                System.out.println("Chamou adição de Item de Cardápio");
+
+                if (requestChunks.length == 1) {
+                    clientOut.println("HTTP/1.1 400 Bad Request");
+                    return;
                 }
-            } else if(metodoHTTP.equals("POST") && endpoint.equals("/itens-cardapio")) {
-                String[] partesReq = request.split("\r\n\r\n", 2);
+                String body = requestChunks[1];
 
+                Gson gson = new Gson();
+                ItemCardapio novoItemCardapio = gson.fromJson(body, ItemCardapio.class);
+                database.adicionaItemCardapio(novoItemCardapio);
 
-                if (partesReq.length > 1) {
-                    String json = partesReq[1].trim();
-                    adicionaUmItemNoCardapio(clientSocket, json);
-                }
-
-            } else{
-                System.out.println("Método não permitido");
-
+                clientOut.println("HTTP/1.1 201 Created");
+            } else {
+                System.out.println("URI não encontrada: " + requestURI);
+                clientOut.println("HTTP/1.1 404 Not Found");
             }
-
+            Thread.sleep(250);
 
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
 
-    private static void getItensCardapio(Socket clientSocket) throws IOException {
-
-        Path path = Path.of("itensCardapio.json");
-        String json = Files.readString(path);
-
-        OutputStream clientOS = clientSocket.getOutputStream();
-        PrintStream clientOut = new PrintStream(clientOS);
-        clientOut.println("HTTP/1.1 200 OK");
-        clientOut.println("Content-type: application/json; charset=UTF-8");
-        clientOut.println();
-        clientOut.println(json);
-    }
-
-    private static void getQtdItensCardapio(Socket clientSocket) throws IOException {
-        DataBase dataBase = new DataBase();
-        int qtdItens = dataBase.listaDeItensCardapio().size();
-
-        OutputStream clientOS = clientSocket.getOutputStream();
-        PrintStream clientOut = new PrintStream(clientOS);
-        clientOut.println("HTTP/1.1 200 OK");
-        clientOut.println("Content-type: application/json; charset=UTF-8");
-        clientOut.println();
-        clientOut.println("Total de itens no cardápio: " + qtdItens);
-    }
-
-    private static void adicionaUmItemNoCardapio(Socket clientSocket, String dadosJson) throws IOException {
-        try {
-            DataBase dataBase = new DataBase();
-            String nomeNovoItem = dataBase.adicionaItemCardapio(dadosJson);
-            OutputStream clientOS = clientSocket.getOutputStream();
-            PrintStream clientOut = new PrintStream(clientOS);
-            clientOut.println("HTTP/1.1 200 OK");
-            clientOut.println("Content-type: application/json; charset=UTF-8");
-            clientOut.println();
-            clientOut.println("Nome do novo item adicionado: " + nomeNovoItem);
-        } catch (Exception e) {
-            System.out.println("Erro: " + e.getMessage());
-        }
-    }
 }
