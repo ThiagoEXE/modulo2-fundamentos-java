@@ -1,12 +1,9 @@
 package mx.florinda.cardapio;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 import static mx.florinda.cardapio.ItemCardapio.CategoriaCardapio.BEBIDAS;
 import static mx.florinda.cardapio.ItemCardapio.CategoriaCardapio.PRATOS_PRINCIPAIS;
@@ -14,11 +11,11 @@ import static mx.florinda.cardapio.ItemCardapio.CategoriaCardapio.SOBREMESAS;
 
 public class DataBase {
 
-    private final Map<Long, ItemCardapio> itensPoId = new HashMap<>();
+    private final Map<Long, ItemCardapio> itensPoId = new ConcurrentSkipListMap<>();
     private final Map<ItemCardapio, BigDecimal> auditoriaPrecos = new IdentityHashMap<>();
 
     public DataBase() {
-        ItemCardapio refrescoDoChaves = new ItemCardapio(1L, "Refresco do Chaves", """
+        /*ItemCardapio refrescoDoChaves = new ItemCardapio(1L, "Refresco do Chaves", """
                 Suco de limão, que parece tamarindo, mas tem gosto de groselha""",
                 BEBIDAS, new BigDecimal("2.99"), null);
         itensPoId.put(1L, refrescoDoChaves);
@@ -46,7 +43,7 @@ public class DataBase {
         ItemCardapio churrosDoChaves = new ItemCardapio(9L, "Churros do Chaves",
                 "Churros recheados com doce de leite, clássicos e irresistíveis.",
                 SOBREMESAS, new BigDecimal("4.99"), new BigDecimal("3.99"));
-        itensPoId.put(9L, churrosDoChaves);
+        itensPoId.put(9L, churrosDoChaves);*/
     }
     public List<ItemCardapio> listaDeItensCardapio() {
 
