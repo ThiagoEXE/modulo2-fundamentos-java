@@ -10,7 +10,7 @@ public record ItemCardapio(Long id, String nome, String descricao, CategoriaCard
         return new ItemCardapio(id, nome, descricao, categoria, novoPreco, precoComDesconto);
     }
     public enum CategoriaCardapio {
-        ENTRADAS, PRATOS_PRINCIPAIS, BEBIDAS, SOBREMESAS;
+        ENTRADAS, PRATOS_PRINCIPAIS, BEBIDAS, SOBREMESA;
     }
 
 }

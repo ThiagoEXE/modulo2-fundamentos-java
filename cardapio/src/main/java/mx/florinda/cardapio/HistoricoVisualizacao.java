@@ -5,10 +5,10 @@ import java.util.*;
 
 public class HistoricoVisualizacao {
 
-    private final DataBase dataBase;
+    private final InMemoryDataBase dataBase;
     final Map<ItemCardapio, LocalDateTime> visualizacoes = new WeakHashMap<>();
 
-    public HistoricoVisualizacao(DataBase dataBase) {
+    public HistoricoVisualizacao(InMemoryDataBase dataBase) {
         this.dataBase = dataBase;
     }
 

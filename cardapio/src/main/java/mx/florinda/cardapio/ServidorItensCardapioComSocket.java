@@ -15,7 +15,7 @@ import com.google.gson.Gson;
 
 public class ServidorItensCardapioComSocket {
 
-    private static final DataBase database = new DataBase();
+    private static final DataBase database = new SQLDatabase();
 
     public static void main(String[] args) throws Exception {
 
