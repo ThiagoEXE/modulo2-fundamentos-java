@@ -7,7 +7,15 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.text.NumberFormat;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
 import java.util.List;
+import java.util.Locale;
+import java.util.ResourceBundle;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Level;
@@ -122,6 +130,78 @@ public class ServidorItensCardapioComSocket {
                     database.adicionaItemCardapio(novoItemCardapio);
 
                     clientOut.println("HTTP/1.1 201 Created");
+                } else if (method.equals("GET") && requestURI.equals("/") || requestURI.equals("/en")) {
+
+                    List<ItemCardapio> listaItensCardapio = database.listaDeItensCardapio();
+
+                    Locale locale = requestURI.equals("/en") ? Locale.US : Locale.of("pt", "BR");
+                    NumberFormat formatadorMoeda = NumberFormat.getCurrencyInstance(locale);
+
+                    ResourceBundle mensagens = ResourceBundle.getBundle("mensagens", locale);
+
+                    DateTimeFormatter formatterDataHora = DateTimeFormatter.ofLocalizedDateTime(FormatStyle.LONG).withLocale(locale);
+                    DateTimeFormatter formatterMesAno = DateTimeFormatter.ofPattern("MMMM/yyyy").withLocale(locale);
+                    StringBuilder htmlTodosItens = new StringBuilder();
+                    for (ItemCardapio item : listaItensCardapio) {
+
+                        String htmlPrecoItem;
+
+                        if (item.precoComDesconto() == null) {
+
+                            htmlPrecoItem = "<strong>" + formatadorMoeda.format(item.preco()) + "</strong>";
+                        } else {
+                            htmlPrecoItem = "<mark>Em promoção</mark> <strong>" + formatadorMoeda.format(item.precoComDesconto()) + "</strong> <s>" + formatadorMoeda.format(item.preco()) + "</s>";
+                        }
+
+                        String categoria = mensagens.getString("categoria.cardapio." + item.categoria().name().toLowerCase());
+                        String htmlItem = """
+                                <article>
+                                    <kbd>%s</kbd>
+                                    <h3>%s</h3>
+                                    <p>%s</p>
+                                    %s
+                                </article>
+                            """.formatted(categoria, item.nome(), item.descricao(), htmlPrecoItem);
+                        htmlTodosItens.append(htmlItem);
+                    }
+
+                    String html = """
+                                <!DOCTYPE html>
+                                <html lang="en">
+                                <head>
+                                    <meta charset="UTF-8">
+                                    <title>Florinda Eats - Cardápio</title>
+                                    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2.1.1/css/pico.min.css">
+                                </head>
+                                <body>
+
+                                <header class="container">
+                                    <hgroup>
+                                        <h1>Florinda Eats</h1>
+                                        <p>O sabor da Vila direto pra você</p>
+                                    </hgroup>
+                                </header>
+
+                                <main class="container">
+                                    <h2>Cardápio</h2>
+
+                                %s
+
+                                </main>
+
+                                <footer class="container">
+                                    <p><small><em>Preços de acordo com %S</em></small></p>
+                                    <p><strong>Florinda Eats</strong> Todos os direitos reservados - %s</p>
+                                </footer>
+                                </body>
+                                </html>
+                                ""\"
+                            """.formatted(htmlTodosItens.toString(), formatterDataHora.format(ZonedDateTime.now()), formatterMesAno.format(YearMonth.now()));
+                    clientOut.print("HTTP/1.1 200 OK\r\n");
+                    clientOut.print("Content-type: text/html; charset=UTF-8\r\n\r\n");
+                    clientOut.print(html);
+                    clientOut.print("\r\n");
+
                 } else {
                     logger.warning("URI não encontrada: " + requestURI);
                     clientOut.println("HTTP/1.1 404 Not Found");
