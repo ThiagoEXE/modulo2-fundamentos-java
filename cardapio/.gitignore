@@ -6,6 +6,7 @@ build/
 .kotlin
 *.lck
 *.log
+*.ser
 *.class
 ### IntelliJ IDEA ###
 .idea/modules.xml
